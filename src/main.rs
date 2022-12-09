@@ -15,7 +15,7 @@ async fn main() {
 
     let (tx, rx) = oneshot::channel::<i32>();
     let (_addr, server) = warp::serve(routes)
-    .bind_with_graceful_shutdown(([127, 0, 0, 1], 8889), async {
+    .bind_with_graceful_shutdown(([127, 0, 0, 1], dotenv::var("PORT").expect("Missing env `PORT`").parse::<u16>().unwrap()), async {
         rx.await.ok();
     });
     tokio::task::spawn(server);

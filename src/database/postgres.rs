@@ -1,7 +1,11 @@
 use tokio_postgres::{Client, NoTls, Error};
 
 pub async fn init() -> Result<Client, Error> {
-    let (client, connection) = tokio_postgres::connect("host=localhost user=gravitalia password=7ZXRbDm7WF dbname=signaly", NoTls).await?;
+    let (client, connection) = tokio_postgres::connect(&format!("host=localhost user={} password={} dbname={}",
+                                                                dotenv::var("DB_USERNAME").expect("Missing env `DB_USERNAME`"),
+                                                                dotenv::var("DB_PASSWORD").expect("Missing env `DB_PASSWORD`"),
+                                                                dotenv::var("DB_NAME").expect("Missing env `DB_NAME`"),
+    )[..], NoTls).await?;
 
     tokio::spawn(async move {
         if let Err(e) = connection.await {

@@ -1,5 +1,6 @@
 use warp::{Filter, reject::Reject};
 use tokio::sync::oneshot;
+mod database;
 mod router;
 mod model;
 
@@ -9,6 +10,7 @@ impl Reject for UnknownError {}
 
 #[tokio::main]
 async fn main() {
+    let _postgres = database::postgres::init().await;
     let routes = warp::path("signal").and(warp::post()).and(warp::body::json()).and(warp::header("authorization")).map(router::signal::post);
 
     let (tx, rx) = oneshot::channel::<i32>();

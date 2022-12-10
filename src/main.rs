@@ -21,7 +21,11 @@ async fn main() {
         .init();
 
     let _postgres = database::postgres::init().await;
-    let routes = warp::path("signal").and(warp::post()).and(warp::body::json()).and(warp::header("authorization")).map(router::signal::post);
+    let routes = warp::path("signal")
+                .and(warp::post())
+                .and(warp::body::json())
+                .and(warp::header("Authorization"))
+                .map(router::signal::post);
 
     let (tx, rx) = oneshot::channel::<i32>();
     let (_addr, server) = warp::serve(routes.with(warp::trace::request()))

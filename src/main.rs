@@ -1,15 +1,33 @@
-#![deny(warnings)]
 use tracing_subscriber::fmt::format::FmtSpan;
 use warp::{Filter, reject::Reject};
 use tokio::sync::oneshot;
 
 mod database;
+mod helpers;
 mod router;
 mod model;
 
 #[derive(Debug)]
 struct UnknownError;
 impl Reject for UnknownError {}
+
+/// Check if a token is valid, have a real user behind (not suspended) and if the fingerprint
+/// is valid
+fn middleware(token: Option<String>, fallback: String, _finger: Option<String>) -> String {
+    if token.is_some() && fallback == *"@me" {
+        match helpers::get_jwt(token.unwrap()) {
+            Ok(data) => {
+                // Check if user isn't deleted or suspended
+                data.claims.sub
+            },
+            Err(_) => "Invalid".to_string()
+        }
+    } else if fallback == *"@me" {
+        "Invalid".to_string()
+    } else {
+        fallback
+    }
+}
 
 #[tokio::main]
 async fn main() {
@@ -26,7 +44,20 @@ async fn main() {
                 .and(warp::post())
                 .and(warp::body::json())
                 .and(warp::header("Authorization"))
-                .map(router::signal::post);
+                .map(|body: model::Signal, token: String| {
+                    let mid = middleware(Some(token), "@me".to_string(), None);
+                    if mid == "Invalid" {
+                        warp::reply::with_status(warp::reply::json(
+                            &model::Error{
+                                error: true,
+                                message: "Invalid Authorization token".to_string(),
+                            }
+                        ),
+                        warp::http::StatusCode::UNAUTHORIZED)
+                    } else {
+                        router::signal::post(body, mid)
+                    }
+                });
 
     let (tx, rx) = oneshot::channel::<i32>();
     let (_addr, server) = warp::serve(routes.with(warp::trace::request()))

@@ -1,7 +1,4 @@
-#![deny(warnings)]
-use tracing_subscriber::fmt::format::FmtSpan;
-use warp::{Filter, reject::Reject};
-use tokio::sync::oneshot;
+use warp::{Filter, reject::Reject, http::StatusCode, Reply};
 
 mod database;
 mod router;
@@ -11,30 +8,36 @@ mod model;
 struct UnknownError;
 impl Reject for UnknownError {}
 
+/// handle_rejection handle the errors and allows
+/// to send a valid response as gravitalia wants
+async fn handle_rejection(_: warp::Rejection) -> Result<impl Reply, std::convert::Infallible> {
+    Ok(warp::reply::with_status(warp::reply::json(&model::Error {
+        error: true,
+        message: "Invalid headers or body".to_string(),
+    }), StatusCode::BAD_REQUEST))
+}
+
 #[tokio::main]
 async fn main() {
-    let port = dotenv::var("PORT").expect("Missing env `PORT`").parse::<u16>().unwrap();
+    // Init database
+    database::cassandra::init();
+    database::cassandra::create_tables();
 
-    tracing_subscriber::fmt()
-        .with_target(false)
-        .with_level(true)
-        .with_span_events(FmtSpan::CLOSE)
-        .init();
-
-    let _postgres = database::postgres::init().await;
-    let routes = warp::path("signal")
+    // Create routes
+    let routes = warp::path("report")
                 .and(warp::post())
                 .and(warp::body::json())
                 .and(warp::header("Authorization"))
-                .map(router::signal::post);
+                .map(router::signal::post).recover(handle_rejection);
 
-    let (tx, rx) = oneshot::channel::<i32>();
-    let (_addr, server) = warp::serve(routes.with(warp::trace::request()))
-    .bind_with_graceful_shutdown(([127, 0, 0, 1], port), async {
-        rx.await.ok();
-    });
-    tokio::task::spawn(server);
+    let port = dotenv::var("PORT").expect("Missing env `PORT`").parse::<u16>().unwrap();
+    println!("Server started on port {}", port);
 
-    tokio::signal::ctrl_c().await.expect("failed to listen for event");
-    let _ = tx.send(1);
+    // Start server
+    warp::serve(warp::any().and(warp::options()).map(|| "OK").or(warp::head().map(|| "OK")).or(routes))
+    .run((
+        [0, 0, 0, 0],
+        port
+    ))
+    .await;
 }

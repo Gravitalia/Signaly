@@ -1,0 +1,28 @@
+use cdrs::authenticators::NoneAuthenticator;
+use cdrs::cluster::session::{new as new_session, Session};
+use cdrs::cluster::{ClusterTcpConfig, NodeTcpConfigBuilder, TcpConnectionPool};
+use cdrs::load_balancing::RoundRobin;
+use cdrs::query::*;
+use uuid::Uuid;
+
+type CurrentSession = Session<RoundRobin<TcpConnectionPool<NoneAuthenticator>>>;
+use once_cell::sync::OnceCell;
+static SESSION: OnceCell<CurrentSession> = OnceCell::new();
+
+/// Init cassandra session
+pub fn init() {
+    let _ = SESSION.set(new_session(&ClusterTcpConfig(vec![NodeTcpConfigBuilder::new(dotenv::var("CASSANDRA_HOST").unwrap_or_else(|_| "127.0.0.1:9042".to_string()).as_str(), NoneAuthenticator {}).build()]), RoundRobin::new()).expect("session should be created"));
+}
+
+/// Create tables in cassandra keyspace if not exists
+pub fn create_tables() {
+    SESSION.get().unwrap().query("CREATE KEYSPACE IF NOT EXISTS signaly WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };").expect("Keyspace create error");
+    SESSION.get().unwrap().query("CREATE TABLE IF NOT EXISTS signaly.reports ( id TEXT, affected_id TEXT, author_id TEXT, platform TEXT, reason TINYINT, timestamp TIMESTAMP, PRIMARY KEY (id) ) WITH compression = {'chunk_length_in_kb': '64', 'class': 'org.apache.cassandra.io.compress.ZstdCompressor'} AND gc_grace_seconds = 0;").expect("signaly.reports create error");
+    SESSION.get().unwrap().query("CREATE TABLE IF NOT EXISTS signaly.punishment ( id TEXT, affected_id TEXT, mod_id TEXT, platform TEXT, reason TINYINT, punishment INT, timestamp TIMESTAMP, PRIMARY KEY (id) ) WITH compression = {'chunk_length_in_kb': '64', 'class': 'org.apache.cassandra.io.compress.ZstdCompressor'} AND gc_grace_seconds = 0;").expect("signaly.reports create error");
+    SESSION.get().unwrap().query("CREATE INDEX IF NOT EXISTS ON signaly.reports ( affected_id );").expect("index (affected_id) create error");
+}
+
+/// Make a query to cassandra
+pub fn query<Q: ToString>(query: Q, params: Vec<String>) -> Result<cdrs::frame::Frame, cdrs::error::Error> {
+    SESSION.get().unwrap().query_with_values(query, params)
+}

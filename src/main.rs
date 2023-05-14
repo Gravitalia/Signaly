@@ -53,7 +53,16 @@ async fn main() {
                 .and(warp::post())
                 .and(warp::body::json())
                 .and(warp::header("Authorization"))
-                .map(router::signal::post)
+                .and_then(|body: model::Signal, authorization: String| async move {
+                    match router::signal::post(body, authorization).await {
+                        Ok(r) => {
+                            Ok(r)
+                        },
+                        Err(_) => {
+                            Err(warp::reject::custom(UnknownError))
+                        }
+                    }
+                })
                 .recover(handle_rejection);
 
     let port = dotenv::var("PORT").expect("Missing env `PORT`").parse::<u16>().unwrap();

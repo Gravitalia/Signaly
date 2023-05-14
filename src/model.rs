@@ -12,3 +12,13 @@ pub struct Signal {
     pub platform: String,
     pub reason: u8,
 }
+
+#[allow(dead_code)]
+#[derive(Deserialize)]
+pub struct GravitaliaUser {
+    pub followers: u32,
+    following: u32,
+    public: bool,
+    pub suspended: bool,
+    access_post: bool
+}

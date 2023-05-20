@@ -20,6 +20,7 @@ warp = "0.3.5"
 serde = { version = "1.0.163", features = ["derive"] }
 
 cdrs = "2.3.3"
+memcache = "0.17.0"
 
 jsonwebtoken = "8.3.0"
 once_cell = "1.17.1"

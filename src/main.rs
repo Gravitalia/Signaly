@@ -47,6 +47,7 @@ async fn main() {
     // Init database
     database::cassandra::init();
     database::cassandra::create_tables();
+    helpers::remove_deleted_account().await;
 
     // Create routes
     let routes = warp::path("report")

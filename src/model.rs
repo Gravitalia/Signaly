@@ -23,7 +23,27 @@ pub struct GravitaliaUser {
     access_post: bool
 }
 
+#[allow(dead_code)]
+#[derive(Deserialize)]
+pub struct AuthaUser {
+    username: String,
+    pub vanity: String,
+    avatar: Option<String>,
+    bio: Option<String>,
+    email: Option<String>,
+    birthdate: Option<String>,
+    verified: bool,
+    deleted: bool,
+    pub flags: u32
+}
+
 #[derive(Deserialize, Debug)]
 pub struct Config {
     pub services: Vec<String>,
+}
+
+#[derive(Deserialize)]
+pub struct Suspend {
+    pub vanity: String,
+    pub platform: String
 }

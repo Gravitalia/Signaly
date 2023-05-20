@@ -46,6 +46,7 @@ async fn handle_rejection(err: warp::Rejection) -> Result<impl Reply, std::conve
 async fn main() {
     // Init database
     database::cassandra::init();
+    let _ =database::mem::init();
     database::cassandra::create_tables();
     helpers::remove_deleted_account().await;
 

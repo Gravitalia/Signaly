@@ -46,7 +46,9 @@ async fn handle_rejection(err: warp::Rejection) -> Result<impl Reply, std::conve
 async fn main() {
     // Init database
     database::cassandra::init();
+    let _ =database::mem::init();
     database::cassandra::create_tables();
+    helpers::remove_deleted_account().await;
 
     // Create routes
     let routes = warp::path("report")
@@ -63,6 +65,20 @@ async fn main() {
                         }
                     }
                 })
+                .or(warp::path("suspend")
+                .and(warp::post())
+                .and(warp::body::json())
+                .and(warp::header("Authorization"))
+                .and_then(|body: model::Suspend, authorization: String| async move {
+                    match router::suspend::suspend(body, authorization).await {
+                        Ok(r) => {
+                            Ok(r)
+                        },
+                        Err(_) => {
+                            Err(warp::reject::custom(UnknownError))
+                        }
+                    }
+                }))
                 .recover(handle_rejection);
 
     let port = dotenv::var("PORT").expect("Missing env `PORT`").parse::<u16>().unwrap();

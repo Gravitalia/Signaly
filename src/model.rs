@@ -22,3 +22,8 @@ pub struct GravitaliaUser {
     pub suspended: bool,
     access_post: bool
 }
+
+#[derive(Deserialize, Debug)]
+pub struct Config {
+    pub services: Vec<String>,
+}

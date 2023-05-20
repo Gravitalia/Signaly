@@ -102,8 +102,17 @@ pub async fn post(body: crate::model::Signal, token: String) -> Result<WithStatu
     };
 
     if req_followers(followers, 0.26) > count {
-        query("UPDATE accounts.users SET deleted = true WHERE vanity = ?", vec![body.vanity.clone()])?;
-        // make a system to delete all data after 30 days
+        let platform_uri = match body.platform.to_lowercase().as_str() {
+            "gravitalia" => {
+                dotenv::var("GRAVITALIA_URL")?
+            },
+            _ => {
+                return Ok(super::err("Invalid platform".to_string()));
+            }
+        };
+
+        query(format!("INSERT INTO signaly.suspend (id, user_id, platform, expire_at) VALUES (?, ?, ?, '{}')", (chrono::Utc::now()+chrono::Duration::days(30)).format("%Y-%m-%d+0000")), vec![Uuid::new_v4().to_string(), body.vanity.clone(), platform_uri.clone()])?;
+        helpers::suspend(body.vanity.clone(), Some(platform_uri)).await?;
         helpers::alert(author_id, body.platform.to_lowercase(), body.vanity, reason.to_string(), "Suspended account, check if it is a false-positive".to_string(), true).await?;
     } else if req_followers(followers, 0.19) > count {
         helpers::alert(author_id, body.platform.to_lowercase(), body.vanity, reason.to_string(), "Alerting support: too many reports".to_string(), true).await?;
@@ -111,5 +120,11 @@ pub async fn post(body: crate::model::Signal, token: String) -> Result<WithStatu
         helpers::alert(author_id, body.platform.to_lowercase(), body.vanity, reason.to_string(), "/".to_string(), false).await?;
     }
 
-    Ok(super::err("Not implemented yet".to_string()))
+    Ok(warp::reply::with_status(warp::reply::json(
+        &crate::model::Error{
+            error: false,
+            message: "OK".to_string(),
+        }
+    ),
+    warp::http::StatusCode::OK))
 }

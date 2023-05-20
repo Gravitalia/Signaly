@@ -1,4 +1,4 @@
-use crate::{database::cassandra::query, helpers};
+use crate::{database::{cassandra::query, mem}, helpers};
 use warp::reply::{WithStatus, Json};
 use anyhow::Result;
 use uuid::Uuid;
@@ -18,20 +18,8 @@ fn req_followers(followers: u32, percent: f32) -> u32 {
 
 /// Handle report route and make action against users
 pub async fn post(body: crate::model::Signal, token: String) -> Result<WithStatus<Json>> {
-    let gv_public_key = dotenv::var("GRAVITALIA_PUBLIC_KEY").expect("Missing env `GRAVITALIA_PUBLIC_KEY`");
-
-    // Select the good public key
-    let public_key: &[u8] = match body.platform.to_lowercase().as_str() {
-        "gravitalia" => {
-            gv_public_key.as_bytes()
-        },
-        _ => {
-            return Ok(super::err("Invalid platform".to_string()));
-        }
-    };
-
     // Check token and set vanity
-    let author_id = match helpers::get_jwt(token, public_key) {
+    let author_id = match helpers::get_jwt(token, dotenv::var("GRAVITALIA_PUBLIC_KEY")?.as_bytes()) {
         Ok(res) => {
             res.claims.sub
         },
@@ -43,6 +31,14 @@ pub async fn post(body: crate::model::Signal, token: String) -> Result<WithStatu
     // Prevent selfreport
     if body.vanity == author_id {
         return Ok(super::err("You can't report yourself".to_string()));
+    }
+
+    let rate_limit = match mem::get(format!("signaly_{}_{}", body.vanity, author_id))? {
+        Some(r) => r.parse::<u16>().unwrap_or(0),
+        None => 0,
+    };
+    if rate_limit >= 1 {
+        return Ok(super::rate());
     }
 
     // Get user and user's followers
@@ -100,6 +96,8 @@ pub async fn post(body: crate::model::Signal, token: String) -> Result<WithStatu
             return Ok(crate::router::err("Internal server error".to_string()));
         }
     };
+
+    mem::set(format!("signaly_{}_{}", body.vanity, author_id), 1)?;
 
     if req_followers(followers, 0.26) > count {
         let platform_uri = match body.platform.to_lowercase().as_str() {

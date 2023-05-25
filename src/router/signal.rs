@@ -83,7 +83,8 @@ pub async fn post(body: crate::model::Signal, token: String) -> Result<WithStatu
     // Get total reports
     let query_res = match query("SELECT COUNT(id) FROM signaly.reports WHERE affected_id = ?", vec![body.vanity.clone()]) {
         Ok(x) => x.get_body().unwrap().as_cols().unwrap().rows_content.clone(),
-        Err(_) => {
+        Err(e) => {
+               eprintln!("Database error: {}", e);
             return Ok(crate::router::err("Internal server error".to_string()));
         }
     };

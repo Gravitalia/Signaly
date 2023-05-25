@@ -93,7 +93,7 @@ pub async fn post(body: crate::model::Signal, token: String) -> Result<WithStatu
             u32::from_be_bytes(d.try_into().unwrap_or_default())
         },
         None => {
-            return Ok(crate::router::err("Internal server error".to_string()));
+            0
         }
     };
 

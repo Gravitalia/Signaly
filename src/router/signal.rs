@@ -118,8 +118,6 @@ pub async fn post(body: crate::model::Signal, token: String) -> Result<WithStatu
     } else {
         helpers::alert(author_id, body.platform.to_lowercase(), body.vanity, reason.to_string(), "/".to_string(), false).await?;
     }
-    
-    println!("end");
 
     Ok(warp::reply::with_status(warp::reply::json(
         &crate::model::Error{

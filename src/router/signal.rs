@@ -18,6 +18,7 @@ fn req_followers(followers: u32, percent: f32) -> u32 {
 
 /// Handle report route and make action against users
 pub async fn post(body: crate::model::Signal, token: String) -> Result<WithStatus<Json>> {
+    println!("received");
     // Check token and set vanity
     let author_id = match helpers::get_jwt(token, dotenv::var("GRAVITALIA_PUBLIC_KEY")?.as_bytes()) {
         Ok(res) => {
@@ -27,6 +28,7 @@ pub async fn post(body: crate::model::Signal, token: String) -> Result<WithStatu
             return Ok(super::err("Invalid token".to_string()));
         }
     };
+    println!("checked token");
 
     // Prevent selfreport
     if body.vanity == author_id {
@@ -61,6 +63,7 @@ pub async fn post(body: crate::model::Signal, token: String) -> Result<WithStatu
             return Ok(super::err("Invalid platform".to_string()));
         }
     };
+    println!("got followers");
 
     // Check if reason is valid
     let reason  = match body.reason {
@@ -77,14 +80,10 @@ pub async fn post(body: crate::model::Signal, token: String) -> Result<WithStatu
             return Ok(super::err("Invalid reason".to_string()));
         }
     };
+    println!("check reason");
 
-    match query(format!("INSERT INTO signaly.reports (id, affected_id, author_id, platform, reason, timestamp) VALUES (?, ?, ?, ?, {}, '{}')", body.reason, chrono::Utc::now().format("%Y-%m-%d %H:%M:%S%:z")), vec![Uuid::new_v4().to_string(), body.vanity.clone(), author_id.clone(), body.platform.to_lowercase()]) {
-        Ok(_) => {},
-        Err(e) => {
-            eprintln!("error: {}", e);
-            return Ok(crate::router::err("Internal server error".to_string()));
-        }
-    }
+    query(format!("INSERT INTO signaly.reports (id, affected_id, author_id, platform, reason, timestamp) VALUES (?, ?, ?, ?, {}, '{}')", body.reason, chrono::Utc::now().format("%Y-%m-%d %H:%M:%S%:z")), vec![Uuid::new_v4().to_string(), body.vanity.clone(), author_id.clone(), body.platform.to_lowercase()])?;
+    println!("insert");
 
     // Get total reports
     let query_res = match query("SELECT COUNT(id) FROM signaly.reports WHERE affected_id = ?", vec![body.vanity.clone()]) {
@@ -94,6 +93,7 @@ pub async fn post(body: crate::model::Signal, token: String) -> Result<WithStatu
             return Ok(crate::router::err("Internal server error".to_string()));
         }
     };
+    println!("got count");
 
     let count = match query_res[0][0].clone().into_plain() {
         Some(d) => {
@@ -103,8 +103,10 @@ pub async fn post(body: crate::model::Signal, token: String) -> Result<WithStatu
             0
         }
     };
+    println!("count");
 
     mem::set(format!("signaly_{}_{}", body.vanity, author_id), 1)?;
+    println!("added one");
 
     if req_followers(followers, 0.26) > count {
         let platform_uri = match body.platform.to_lowercase().as_str() {
@@ -124,6 +126,8 @@ pub async fn post(body: crate::model::Signal, token: String) -> Result<WithStatu
     } else {
         helpers::alert(author_id, body.platform.to_lowercase(), body.vanity, reason.to_string(), "/".to_string(), false).await?;
     }
+    
+    println!("end");
 
     Ok(warp::reply::with_status(warp::reply::json(
         &crate::model::Error{

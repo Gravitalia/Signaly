@@ -78,7 +78,13 @@ pub async fn post(body: crate::model::Signal, token: String) -> Result<WithStatu
         }
     };
 
-    query(format!("INSERT INTO signaly.reports (id, affected_id, author_id, platform, reason, timestamp) VALUES (?, ?, ?, ?, {}, '{}')", body.reason, chrono::Utc::now().format("%Y-%m-%d %H:%M:%S%:z")), vec![Uuid::new_v4().to_string(), body.vanity.clone(), author_id.clone(), body.platform.to_lowercase()])?;
+    match query(format!("INSERT INTO signaly.reports (id, affected_id, author_id, platform, reason, timestamp) VALUES (?, ?, ?, ?, {}, '{}')", body.reason, chrono::Utc::now().format("%Y-%m-%d %H:%M:%S%:z")), vec![Uuid::new_v4().to_string(), body.vanity.clone(), author_id.clone(), body.platform.to_lowercase()]) {
+        Ok(_) => {},
+        Err(e) => {
+            eprintln!("error: {}", e);
+            return Ok(crate::router::err("Internal server error".to_string()));
+        }
+    }
 
     // Get total reports
     let query_res = match query("SELECT COUNT(id) FROM signaly.reports WHERE affected_id = ?", vec![body.vanity.clone()]) {

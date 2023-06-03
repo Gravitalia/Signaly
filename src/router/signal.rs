@@ -3,17 +3,19 @@ use warp::reply::{WithStatus, Json};
 use anyhow::Result;
 use uuid::Uuid;
 
-/// Get the requiered followers to take an action
-fn req_followers(followers: u32, percent: f32) -> u32 {
-    let calcul = (followers as f32 * percent).round() as u32;
+const EXP_CONSTANT: f32 = -0.0000021;
+const BASE_VALUE: f32 = 30000.0;
+
+/// Get the requiered count to take a certain action
+fn req_followers(followers: u32, multiplier: f32) -> u32 {
+    let calculation = (1.0 - (EXP_CONSTANT * followers as f32).exp()) * BASE_VALUE;
     
-    if percent < 0.15 {
-        calcul.max(10)
-    } else if (0.15..0.25).contains(&percent) {
-        calcul.max(30)
-    } else {
-        calcul.max(100)
-    }
+    let max = match followers {
+        1..=20 => if multiplier == 10.0 { 100.0 } else { 10.0 },
+        _ => 1.0,
+    };
+        
+    (calculation * multiplier).max(max) as u32
 }
 
 /// Handle report route and make action against users
@@ -84,7 +86,7 @@ pub async fn post(body: crate::model::Signal, token: String) -> Result<WithStatu
     let query_res = match query("SELECT COUNT(id) FROM signaly.reports WHERE affected_id = ?", vec![body.vanity.clone()]) {
         Ok(x) => x.get_body().unwrap().as_cols().unwrap().rows_content.clone(),
         Err(e) => {
-               eprintln!("Database error: {}", e);
+            eprintln!("Database error: {}", e);
             return Ok(crate::router::err("Internal server error".to_string()));
         }
     };
@@ -100,7 +102,7 @@ pub async fn post(body: crate::model::Signal, token: String) -> Result<WithStatu
     
     mem::set(format!("signaly_{}_{}", body.vanity, author_id), 1)?;
 
-    if req_followers(followers, 0.26) > count {
+    if req_followers(followers, 10.0) < count {
         let platform_uri = match body.platform.to_lowercase().as_str() {
             "gravitalia" => {
                 dotenv::var("GRAVITALIA_URL")?
@@ -113,7 +115,7 @@ pub async fn post(body: crate::model::Signal, token: String) -> Result<WithStatu
         query(format!("INSERT INTO signaly.suspend (id, user_id, platform, expire_at) VALUES (?, ?, ?, '{}')", (chrono::Utc::now()+chrono::Duration::days(30)).format("%Y-%m-%d+0000")), vec![Uuid::new_v4().to_string(), body.vanity.clone(), platform_uri.clone()])?;
         helpers::suspend(body.vanity.clone(), Some(platform_uri)).await?;
         helpers::alert(author_id, body.platform.to_lowercase(), body.vanity, reason.to_string(), "Suspended account, check if it is a false-positive".to_string(), true).await?;
-    } else if req_followers(followers, 0.19) > count {
+    } else if req_followers(followers, 2.0) < count {
         helpers::alert(author_id, body.platform.to_lowercase(), body.vanity, reason.to_string(), "Alerting support: too many reports".to_string(), true).await?;
     } else {
         helpers::alert(author_id, body.platform.to_lowercase(), body.vanity, reason.to_string(), "/".to_string(), false).await?;

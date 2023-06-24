@@ -31,7 +31,7 @@ pub struct GravitaliaPost {
     description: String,
     text: String,
     pub like: usize,
-    author: String
+    pub author: String
 }
 
 #[allow(dead_code)]

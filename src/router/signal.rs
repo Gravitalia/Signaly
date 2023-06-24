@@ -49,7 +49,8 @@ pub async fn post(body: crate::model::Signal, token: String) -> Result<WithStatu
         "gravitalia" => {
             if body.vanity.chars().all(|c| c.is_ascii_digit()) {
                 let post_data = helpers::get_gravitalia_likes(body.vanity.clone()).await?;
-                post_author = Some(post_data.author)
+                post_author = Some(post_data.author);
+                
                 post_data.like
             } else {
                 match helpers::get_gravitalia_sub(body.vanity.clone()).await {

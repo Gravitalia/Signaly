@@ -29,7 +29,7 @@ pub async fn get_gravitalia_sub(vanity: String) -> Result<crate::model::Gravital
 }
 
 /// Allows to get the Gravitalia post data and likes
-pub async fn get_gravitalia_likes(id: String) -> Result<crate::model::GravitaliaUser> {
+pub async fn get_gravitalia_likes(id: String) -> Result<crate::model::GravitaliaPost> {
     Ok(reqwest::get(format!("{}posts/{}", dotenv::var("GRAVITALIA_URL")?, id))
         .await?
         .json::<crate::model::GravitaliaPost>()

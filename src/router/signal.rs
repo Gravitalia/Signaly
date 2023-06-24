@@ -46,16 +46,20 @@ pub async fn post(body: crate::model::Signal, token: String) -> Result<WithStatu
     // Get user and user's followers
     let followers = match body.platform.to_lowercase().as_str() {
         "gravitalia" => {
-            match helpers::get_gravitalia_sub(body.vanity.clone()).await {
-                Ok(d) => {
-                    if d.suspended {
+            if body.vanity.chars().all(|c| c.is_ascii_digit()) {
+                helpers::get_gravitalia_sub(body.vanity.clone()).await?.like
+            } else {
+                match helpers::get_gravitalia_sub(body.vanity.clone()).await {
+                    Ok(d) => {
+                        if d.suspended {
+                            return Ok(super::err("Invalid user".to_string()));
+                        }
+    
+                        d.followers
+                    },
+                    Err(_) => {
                         return Ok(super::err("Invalid user".to_string()));
                     }
-
-                    d.followers
-                },
-                Err(_) => {
-                    return Ok(super::err("Invalid user".to_string()));
                 }
             }
         },

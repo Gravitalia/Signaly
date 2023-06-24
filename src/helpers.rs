@@ -28,6 +28,14 @@ pub async fn get_gravitalia_sub(vanity: String) -> Result<crate::model::Gravital
         .await?)
 }
 
+/// Allows to get the Gravitalia post data and likes
+pub async fn get_gravitalia_likes(id: String) -> Result<crate::model::GravitaliaPost> {
+    Ok(reqwest::get(format!("{}posts/{}", dotenv::var("GRAVITALIA_URL")?, id))
+        .await?
+        .json::<crate::model::GravitaliaPost>()
+        .await?)
+}
+
 /// Allows to get the Gravitalia profile and subscriers
 pub async fn alert(vanity: String, platform: String, affected_user: String, reason: String, action_taken: String, with_mention: bool) -> Result<()> {
     let msg_begin = if with_mention {
@@ -36,9 +44,15 @@ pub async fn alert(vanity: String, platform: String, affected_user: String, reas
         "".to_string()
     };
 
+    let against_url = if affected_user.chars().all(|c| c.is_ascii_digit()) {
+        format!("https://www.gravitalia.com/p/{}", affected_user)
+    } else {
+        format!("https://www.gravitalia.com/{}", affected_user)
+    };
+
     let json_body = format!(r#"
         {{
-            "content": "{}New report request from [{}](https://www.gravitalia.com/{}) for the `{}` platform, against [{}](https://www.gravitalia.com/{}) for **{}**.",
+            "content": "{}New report request from [{}](https://www.gravitalia.com/{}) for the `{}` platform, against [{}]({}) for **{}**.",
             "embeds": [
                 {{
                     "color": 3353411,
@@ -74,7 +88,7 @@ pub async fn alert(vanity: String, platform: String, affected_user: String, reas
         vanity,
         platform,
         affected_user,
-        affected_user,
+        against_url,
         reason,
         vanity,
         affected_user,

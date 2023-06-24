@@ -25,6 +25,17 @@ pub struct GravitaliaUser {
 
 #[allow(dead_code)]
 #[derive(Deserialize)]
+pub struct GravitaliaPost {
+    id: String,
+    hash: Vec<String>,
+    description: String,
+    text: String,
+    pub like: u32,
+    pub author: String
+}
+
+#[allow(dead_code)]
+#[derive(Deserialize)]
 pub struct AuthaUser {
     username: String,
     pub vanity: String,

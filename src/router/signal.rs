@@ -43,19 +43,27 @@ pub async fn post(body: crate::model::Signal, token: String) -> Result<WithStatu
         return Ok(super::rate());
     }
 
+    let mut post_author: Option<String> = None;
     // Get user and user's followers
     let followers = match body.platform.to_lowercase().as_str() {
         "gravitalia" => {
-            match helpers::get_gravitalia_sub(body.vanity.clone()).await {
-                Ok(d) => {
-                    if d.suspended {
+            if body.vanity.chars().all(|c| c.is_ascii_digit()) {
+                let post_data = helpers::get_gravitalia_likes(body.vanity.clone()).await?;
+                post_author = Some(post_data.author);
+                
+                post_data.like
+            } else {
+                match helpers::get_gravitalia_sub(body.vanity.clone()).await {
+                    Ok(d) => {
+                        if d.suspended {
+                            return Ok(super::err("Invalid user".to_string()));
+                        }
+    
+                        d.followers
+                    },
+                    Err(_) => {
                         return Ok(super::err("Invalid user".to_string()));
                     }
-
-                    d.followers
-                },
-                Err(_) => {
-                    return Ok(super::err("Invalid user".to_string()));
                 }
             }
         },
@@ -63,6 +71,11 @@ pub async fn post(body: crate::model::Signal, token: String) -> Result<WithStatu
             return Ok(super::err("Invalid platform".to_string()));
         }
     };
+
+    // Prevent reporting his own post
+    if post_author.is_some() && post_author.unwrap_or_default() == author_id {
+        return Ok(super::err("You can't report your own post".to_string()));
+    }
 
     // Check if reason is valid
     let reason  = match body.reason {

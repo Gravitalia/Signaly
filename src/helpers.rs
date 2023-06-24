@@ -44,9 +44,15 @@ pub async fn alert(vanity: String, platform: String, affected_user: String, reas
         "".to_string()
     };
 
+    let against_url = if affected_user.chars().all(|c| c.is_ascii_digit()) {
+        format!("https://www.gravitalia.com/p/{}", affected_user)
+    } else {
+        format!("https://www.gravitalia.com/{}", affected_user)
+    };
+
     let json_body = format!(r#"
         {{
-            "content": "{}New report request from [{}](https://www.gravitalia.com/{}) for the `{}` platform, against [{}](https://www.gravitalia.com/{}) for **{}**.",
+            "content": "{}New report request from [{}](https://www.gravitalia.com/{}) for the `{}` platform, against [{}]({}) for **{}**.",
             "embeds": [
                 {{
                     "color": 3353411,
@@ -82,7 +88,7 @@ pub async fn alert(vanity: String, platform: String, affected_user: String, reas
         vanity,
         platform,
         affected_user,
-        affected_user,
+        against_url,
         reason,
         vanity,
         affected_user,

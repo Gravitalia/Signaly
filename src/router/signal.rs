@@ -43,7 +43,7 @@ pub async fn post(body: crate::model::Signal, token: String) -> Result<WithStatu
         return Ok(super::rate());
     }
 
-    let post_author: Option<String> = None;
+    let mut post_author: Option<String> = None;
     // Get user and user's followers
     let followers = match body.platform.to_lowercase().as_str() {
         "gravitalia" => {

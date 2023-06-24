@@ -30,7 +30,7 @@ pub struct GravitaliaPost {
     hash: Vec<String>,
     description: String,
     text: String,
-    pub like: usize,
+    pub like: u32,
     pub author: String
 }
 

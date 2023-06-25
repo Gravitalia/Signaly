@@ -16,9 +16,9 @@ pub fn init() {
 /// Create tables in cassandra keyspace if not exists
 pub fn create_tables() {
     SESSION.get().unwrap().query("CREATE KEYSPACE IF NOT EXISTS signaly WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };").expect("Keyspace create error");
-    SESSION.get().unwrap().query("CREATE TABLE IF NOT EXISTS signaly.reports ( id TEXT, affected_id TEXT, author_id TEXT, platform TEXT, reason TINYINT, timestamp TIMESTAMP, PRIMARY KEY (id) ) WITH compression = {'chunk_length_in_kb': '64', 'class': 'org.apache.cassandra.io.compress.ZstdCompressor'} AND gc_grace_seconds = 0 AND default_time_to_live = 2630000;").expect("signaly.reports create error");
-    SESSION.get().unwrap().query("CREATE TABLE IF NOT EXISTS signaly.punishment ( id TEXT, affected_id TEXT, mod_id TEXT, platform TEXT, reason TINYINT, punishment INT, timestamp TIMESTAMP, PRIMARY KEY (id) ) WITH compression = {'chunk_length_in_kb': '64', 'class': 'org.apache.cassandra.io.compress.ZstdCompressor'} AND gc_grace_seconds = 0;").expect("signaly.reports create error");
-    SESSION.get().unwrap().query("CREATE TABLE IF NOT EXISTS signaly.suspend ( id TEXT, user_id TEXT, platform TEXT, expire_at TIMESTAMP, PRIMARY KEY (id) ) WITH compression = {'chunk_length_in_kb': '64', 'class': 'org.apache.cassandra.io.compress.ZstdCompressor'} AND gc_grace_seconds = 0;").expect("signaly.reports create error");
+    SESSION.get().unwrap().query("CREATE TABLE IF NOT EXISTS signaly.reports ( id TEXT, affected_id TEXT, author_id TEXT, platform TEXT, reason TINYINT, timestamp TIMESTAMP, PRIMARY KEY (id) ) WITH gc_grace_seconds = 0 AND default_time_to_live = 2630000;").expect("signaly.reports create error");
+    SESSION.get().unwrap().query("CREATE TABLE IF NOT EXISTS signaly.punishment ( id TEXT, affected_id TEXT, mod_id TEXT, platform TEXT, reason TINYINT, punishment INT, timestamp TIMESTAMP, PRIMARY KEY (id) ) WITH gc_grace_seconds = 0;").expect("signaly.reports create error");
+    SESSION.get().unwrap().query("CREATE TABLE IF NOT EXISTS signaly.suspend ( id TEXT, user_id TEXT, platform TEXT, expire_at TIMESTAMP, PRIMARY KEY (id) ) WITH gc_grace_seconds = 0;").expect("signaly.reports create error");
     SESSION.get().unwrap().query("CREATE INDEX IF NOT EXISTS ON signaly.reports ( affected_id );").expect("index (affected_id) create error");
     SESSION.get().unwrap().query("CREATE INDEX IF NOT EXISTS ON signaly.suspend ( expire_at );").expect("second index (expire_at) create error");
 }

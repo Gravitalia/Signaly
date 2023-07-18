@@ -29,4 +29,4 @@ uuid = { version = "1.4.0", features = ["v4"] }
 anyhow = "1.0.72"
 reqwest = { version = "0.11.17", features = ["json"] }
 chrono = "0.4.26"
-serde_yaml = "0.9.22"
+serde_yaml = "0.9.23"

@@ -1,0 +1,15 @@
+[package]
+name = "signaly"
+version.workspace = true
+description = """
+Report and sanction aggregator to perform targeted research.
+"""
+readme.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+tokio = { version = "1", features = ["rt-multi-thread"] }
+
+signaly-db = { path = "../signaly-db", default-features = false, features = ["cassandra", "kafka"] }
+signaly-error = { path = "../signaly-error" }

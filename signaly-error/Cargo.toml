@@ -1,0 +1,7 @@
+[package]
+name = "signaly-error"
+version = "0.1.0"
+description = "Error types for Signaly."
+readme.workspace = true
+edition.workspace = true
+license.workspace = true

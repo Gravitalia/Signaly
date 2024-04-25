@@ -22,3 +22,5 @@
 pub mod cassandra;
 #[cfg(feature = "timeseries")]
 pub mod influxdb;
+#[cfg(feature = "apache_kafka")]
+pub mod kafka;

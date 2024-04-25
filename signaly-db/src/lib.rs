@@ -24,3 +24,5 @@ pub mod cassandra;
 pub mod influxdb;
 #[cfg(feature = "apache_kafka")]
 pub mod kafka;
+#[cfg(feature = "rabbitmq")]
+pub mod rabbitmq;

@@ -1,0 +1,26 @@
+[package]
+name = "signaly-db"
+version = "0.1.0"
+description = """
+Handle database and message broker connection pools for InfluxDB, Kafka
+and potentially Apache Cassandra and RabbitMQ.
+"""
+readme.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+deadpool = { version = "0.11", default-features = false, features = ["managed", "rt_tokio_1"] }
+influxdb = { version = "0.7", optional = true, default-features = false, features = ["derive", "use-serde", "hyper-client"] }
+scylla = { version = "0.12", optional = true }
+kafka = { version = "0.10", optional = true }
+lapin = { version = "2.3.3", optional = true }
+futures-executor = { version = "0", optional = true }
+tracing = "0.1"
+
+[features]
+default = ["timeseries", "apache_kafka", "cassandra"]
+timeseries = ["influxdb"]
+cassandra = ["scylla"]
+apache_kafka = ["kafka"]
+rabbitmq = ["lapin", "futures-executor"]

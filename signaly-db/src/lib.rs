@@ -20,3 +20,5 @@
 
 #[cfg(feature = "cassandra")]
 pub mod cassandra;
+#[cfg(feature = "timeseries")]
+pub mod influxdb;

@@ -13,8 +13,8 @@ pub struct KafkaConnectionManager {
 impl KafkaConnectionManager {
     /// Creates a new [`KafkaConnectionManager`].
     ///
-    /// See [`influxdb::Client`] for a description of the parameter
-    /// types.
+    /// See [`kafka::producer::Producer`] and [`kafka::client::KafkaClient`]
+    /// for a description of the parameter types.
     pub fn new(urls: Vec<String>) -> KafkaConnectionManager {
         KafkaConnectionManager { urls }
     }

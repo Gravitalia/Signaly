@@ -7,7 +7,7 @@ use signaly_error::{DatabaseError::PoolCreation, Error, ErrorType};
 
 type Pool = deadpool::managed::Pool<KafkaConnectionManager>;
 
-/// Manage InfluxDB pool connection.
+/// Manage Apache Kafka pool connection.
 #[allow(dead_code, missing_debug_implementations)]
 pub struct Manager {
     /// Pool session.

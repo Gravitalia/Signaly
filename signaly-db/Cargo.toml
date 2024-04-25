@@ -10,6 +10,7 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
+signaly-error = { path = "../signaly-error" }
 deadpool = { version = "0.11", default-features = false, features = ["managed", "rt_tokio_1"] }
 influxdb = { version = "0.7", optional = true, default-features = false, features = ["derive", "use-serde", "hyper-client"] }
 scylla = { version = "0.12", optional = true }

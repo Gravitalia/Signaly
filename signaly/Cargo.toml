@@ -13,3 +13,6 @@ tokio = { version = "1", features = ["rt-multi-thread"] }
 
 signaly-db = { path = "../signaly-db", default-features = false, features = ["cassandra", "kafka"] }
 signaly-error = { path = "../signaly-error" }
+
+tracing = "0.1"
+tracing-subscriber = "0.3"

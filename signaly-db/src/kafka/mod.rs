@@ -14,6 +14,15 @@ pub struct Manager {
     session: Pool,
 }
 
+/// Type of session to create.
+#[derive(Debug)]
+pub enum Type {
+    /// Creates a session to produce messages.
+    Producer,
+    /// Creates a session to consume messages.
+    Consumer,
+}
+
 impl Manager {
     /// Create a new pool of connections.
     ///
@@ -26,11 +35,17 @@ impl Manager {
     /// );
     /// // Do what ever you want with your cool new session...
     /// ```
-    pub async fn new(urls: Vec<String>) -> Result<Self, Error> {
+    pub async fn new(
+        mode: Type,
+        topic: Option<String>,
+        urls: Vec<String>,
+    ) -> Result<Self, Error> {
         Ok(Manager {
-            session: Pool::builder(KafkaConnectionManager::new(urls))
-                .build()
-                .map_err(|error| {
+            session: Pool::builder(KafkaConnectionManager::new(
+                urls, topic, mode,
+            ))
+            .build()
+            .map_err(|error| {
                 Error::new(
                     ErrorType::Database(PoolCreation),
                     Some(Box::new(error)),

@@ -41,10 +41,17 @@ The following attributes **MUST** be placed in the `data` field provided by Clou
 
 **reason**
 * Type: `string`
-* Description: Reason for the sanction or warning to be recorded. This reason can be used to better identify specific behaviour and target an automatic sanction.
+* Description: reason for the sanction or warning to be recorded. This reason can be used to better identify specific behaviour and target an automatic sanction.
 * Constraints:
   * OPTIONAL.
   * **SHOULD** fit with predetermined reasons: `Copyright`, `Defamation`, `Hate`, `Harassment`, `Nudity`, `Spam` or `Violence`.
+
+**sanction**
+* Type: `string`
+* Description: sanction taken against user.
+* Constraints:
+  * OPTIONAL.
+  * **MUST** fit with predetermined sanctions: `Suspension` *(specific to the accounts)*, `Removal` *(specific to the content)*.
 
 ## Message example
 The following example shows a message containing a report of `Nudity` from user `x` to user `y`:

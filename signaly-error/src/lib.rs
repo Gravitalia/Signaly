@@ -46,7 +46,7 @@ impl Error {
         Error {
             etype,
             cause,
-            context: context,
+            context,
         }
     }
 }
@@ -81,6 +81,8 @@ impl StdError for ErrorType {}
 pub enum DatabaseError {
     /// The connection pool has not been created correctly.
     PoolCreation,
+    /// The connection pool could not be obtained.
+    PoolObtention,
 }
 
 impl fmt::Display for DatabaseError {
@@ -88,6 +90,9 @@ impl fmt::Display for DatabaseError {
         match self {
             DatabaseError::PoolCreation => {
                 write!(f, "The connection pool has not been created correctly.")
+            },
+            DatabaseError::PoolObtention => {
+                write!(f, "The connection pool could not be obtained.")
             },
         }
     }

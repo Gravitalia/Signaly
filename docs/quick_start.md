@@ -20,10 +20,20 @@ services:
     platform: linux/amd64
     container_name: signaly
     depends_on:
+      - cassandra
       - kafka
     environment:
-      TOPIC: gravitalia.*.report # where `*` is the service name.
+      TOPIC: compliance
       KAFKA_BROKERS: localhost:9092 # use a comma (,) to add multiple brokers.
+
+  cassandra:
+    image: cassandra:latest
+    restart: always
+    container_name: cassandra
+    ports:
+      - 9042:9042
+    volumes:
+      - ./data/cassandra:/var/lib/cassandra
 
   zookeeper:
     image: wurstmeister/zookeeper
@@ -38,13 +48,16 @@ services:
       - zookeeper
     ports:
       - 9092:9092
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     environment:
       KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka:9092,OUTSIDE://localhost:9093
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
       KAFKA_LISTENERS: INSIDE://0.0.0.0:9092,OUTSIDE://0.0.0.0:9093
       KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_CREATE_TOPICS: "gravitalia.*.report"
+      KAFKA_CREATE_TOPICS: "compliance:3:1"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 ```
 
 2. Execute `docker-compose up`.

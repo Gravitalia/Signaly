@@ -2,9 +2,14 @@
 
 mod pool;
 
-use lapin::ConnectionProperties;
+use lapin::{
+    options::BasicPublishOptions, BasicProperties, ConnectionProperties,
+};
 use pool::LapinConnectionManager;
-use signaly_error::{DatabaseError::PoolCreation, Error, ErrorType};
+use signaly_error::{
+    DatabaseError::{MessageNotSent, PoolCreation, PoolObtention},
+    Error, ErrorType,
+};
 
 type Pool = deadpool::managed::Pool<LapinConnectionManager>;
 
@@ -42,5 +47,52 @@ impl Manager {
                 )
             })?,
         })
+    }
+
+    /// Send a message via RabbitMQ.
+    pub async fn send(
+        &self,
+        topic: String,
+        content: String,
+    ) -> Result<(), Error> {
+        self.session
+            .get()
+            .await
+            .map_err(|error| {
+                Error::new(
+                    ErrorType::Database(PoolObtention),
+                    Some(Box::new(error)),
+                    Some(
+                        "while trying to send a message via RabbitMQ"
+                            .to_string(),
+                    ),
+                )
+            })?
+            .create_channel()
+            .await
+            .map_err(|error| {
+                Error::new(
+                    ErrorType::Unspecified,
+                    Some(Box::new(error)),
+                    Some("cannot create RabbitMQ channel".to_string()),
+                )
+            })?
+            .basic_publish(
+                "",
+                topic.as_str(),
+                BasicPublishOptions::default(),
+                content.as_bytes(),
+                BasicProperties::default(),
+            )
+            .await
+            .map_err(|error| {
+                Error::new(
+                    ErrorType::Database(MessageNotSent),
+                    Some(Box::new(error)),
+                    None,
+                )
+            })?;
+
+        Ok(())
     }
 }

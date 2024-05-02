@@ -83,6 +83,8 @@ pub enum DatabaseError {
     PoolCreation,
     /// The connection pool could not be obtained.
     PoolObtention,
+    /// The message for the broker has not been sent.
+    MessageNotSent,
 }
 
 impl fmt::Display for DatabaseError {
@@ -93,6 +95,9 @@ impl fmt::Display for DatabaseError {
             },
             DatabaseError::PoolObtention => {
                 write!(f, "The connection pool could not be obtained.")
+            },
+            DatabaseError::MessageNotSent => {
+                write!(f, "The message for the broker has not been sent.")
             },
         }
     }

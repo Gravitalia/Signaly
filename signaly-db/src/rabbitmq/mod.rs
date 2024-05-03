@@ -2,6 +2,10 @@
 
 mod pool;
 
+pub use ::lapin::{
+    options::{BasicAckOptions, BasicConsumeOptions},
+    types::FieldTable,
+};
 use lapin::{
     options::BasicPublishOptions, BasicProperties, ConnectionProperties,
 };
@@ -17,7 +21,7 @@ type Pool = deadpool::managed::Pool<LapinConnectionManager>;
 #[allow(dead_code, missing_debug_implementations)]
 pub struct Manager {
     /// Pool session.
-    session: Pool,
+    pub session: Pool,
 }
 
 impl Manager {

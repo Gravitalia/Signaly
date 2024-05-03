@@ -10,9 +10,20 @@ license.workspace = true
 
 [dependencies]
 tokio = { version = "1", features = ["rt-multi-thread"] }
+serde = "1"
+serde_json = "1"
 
-signaly-db = { path = "../signaly-db", default-features = false, features = ["cassandra", "kafka"] }
+signaly-db = { path = "../signaly-db", default-features = false }
 signaly-error = { path = "../signaly-error" }
 
 tracing = "0.1"
 tracing-subscriber = "0.3"
+
+futures-lite = { version = "2", optional = true }
+
+[features]
+default = ["cassandra", "kafka"]
+cassandra = ["signaly-db/cassandra"]
+influxdb = ["signaly-db/timeseries"]
+kafka = ["signaly-db/apache_kafka"]
+rabbitmq = ["signaly-db/rabbitmq", "futures-lite"]

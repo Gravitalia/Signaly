@@ -40,7 +40,7 @@ impl Manager {
         Ok(Manager {
             session: Pool::builder(LapinConnectionManager::new(
                 host,
-                ConnectionProperties::default(),
+                ConnectionProperties::default()
             ))
             .build()
             .map_err(|error| {
@@ -88,6 +88,14 @@ impl Manager {
                 content.as_bytes(),
                 BasicProperties::default(),
             )
+            .await
+            .map_err(|error| {
+                Error::new(
+                    ErrorType::Database(MessageNotSent),
+                    Some(Box::new(error)),
+                    None,
+                )
+            })?
             .await
             .map_err(|error| {
                 Error::new(

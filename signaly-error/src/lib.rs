@@ -64,13 +64,18 @@ pub enum ErrorType {
     Unspecified,
     /// Errors related to `signaly-db`.
     Database(DatabaseError),
+    /// IO errors, especially in `signaly-db` and `signaly-telemetry`.
+    InuputOutput(IoError),
 }
 
 impl fmt::Display for ErrorType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            ErrorType::Unspecified => write!(f, "An error has occurred, but no further information is provided."),
-            ErrorType::Database(_) => unimplemented!(),
+            ErrorType::Unspecified => {
+                write!(f, "An error has occurred, but no further information is provided.")
+            },
+            ErrorType::Database(error) => write!(f, "{:?}", error),
+            ErrorType::InuputOutput(error) => write!(f, "{:?}", error),
         }
     }
 }
@@ -103,3 +108,22 @@ impl fmt::Display for DatabaseError {
     }
 }
 impl StdError for DatabaseError {}
+
+/// Errors related to `signaly-db`.
+#[derive(Debug)]
+pub enum IoError {
+    /// Reading failed.
+    ReadError,
+    /// Writing failed.
+    WriteError,
+}
+
+impl fmt::Display for IoError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            IoError::ReadError => write!(f, "Reading failed."),
+            IoError::WriteError => write!(f, "Writing failed."),
+        }
+    }
+}
+impl StdError for IoError {}

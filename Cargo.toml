@@ -3,7 +3,8 @@ resolver = "2"
 members = [
     "signaly",
     "signaly-db",
-    "signaly-error"
+    "signaly-error",
+    "signaly-telemetry"
 ]
 
 [workspace.package]

@@ -13,17 +13,18 @@ tokio = { version = "1", features = ["rt-multi-thread"] }
 serde = "1"
 serde_json = "1"
 
+signaly-telemetry = { path = "../signaly-telemetry", optional = true }
 signaly-db = { path = "../signaly-db", default-features = false }
 signaly-error = { path = "../signaly-error" }
 
 tracing = "0.1"
 tracing-subscriber = "0.3"
-
 futures-lite = { version = "2", optional = true }
 
 [features]
-default = ["cassandra", "kafka"]
+default = ["cassandra", "kafka", "telemetry"]
 cassandra = ["signaly-db/cassandra"]
 influxdb = ["signaly-db/timeseries"]
 kafka = ["signaly-db/apache_kafka"]
 rabbitmq = ["signaly-db/rabbitmq", "futures-lite"]
+telemetry = ["signaly-telemetry"]

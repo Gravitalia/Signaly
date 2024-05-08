@@ -1,0 +1,24 @@
+[package]
+name = "signaly-telemetry"
+version.workspace = true
+description.workspace = true
+readme.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+warp = { version = "0.3", optional = true, default-features = false } # to add a /metrics route.
+signaly-error = { path = "../signaly-error" }
+tracing = "0.1"
+lazy_static = { version = "1", optional = true }
+opentelemetry = { version = "0.22", optional = true }
+opentelemetry-jaeger = { version = "0.21.0", features = ["rt-tokio"], optional = true }
+opentelemetry_sdk =  { version = "0.22", features = ["rt-tokio"], optional = true }
+prometheus = { version = "0.13", features = ["process"], optional = true }
+tracing-loki = { version = "0.2", optional = true }
+
+[features]
+default = ["metrics", "log", "tracing"]
+metrics = ["warp", "lazy_static", "prometheus"]
+log = ["tracing-loki"]
+tracing = ["opentelemetry", "opentelemetry-jaeger", "opentelemetry_sdk"]

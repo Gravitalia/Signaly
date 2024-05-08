@@ -11,6 +11,7 @@ COPY ./Cargo.lock ./Cargo.lock
 COPY ./signaly ./signaly
 COPY ./signaly-db ./signaly-db
 COPY ./signaly-error ./signaly-error
+COPY ./signaly-telemetry ./signaly-telemetry
 
 RUN cargo build --release
 

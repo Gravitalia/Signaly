@@ -83,6 +83,9 @@ async fn main() -> signaly_error::Result<()> {
             .await?;
 
             helpers::consume_messages(kafka_consumer);
+
+            #[cfg(not(feature = "telemetry"))]
+            loop {}
         },
         #[cfg(feature = "rabbitmq")]
         (Err(_), Ok(address)) => {
@@ -94,11 +97,21 @@ async fn main() -> signaly_error::Result<()> {
                 std::env::var("TOPIC").unwrap_or_else(|_| "*".to_string()),
             );
 
+            #[cfg(not(feature = "telemetry"))]
             loop {}
         },
         _ => {
             error!("No specified broker in environment (KAFKA_BROKERS or AMQP_BROKER) OR wrong feature built.");
             std::process::exit(0);
         },
+    }
+
+    #[cfg(feature = "telemetry")]
+    {
+        use signaly_telemetry::metrics::create_server;
+
+        create_server().await;
+
+        Ok(())
     }
 }
